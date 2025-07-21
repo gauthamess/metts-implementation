@@ -16,8 +16,17 @@ function cps_z(spin, N) #Sz product states # Eigenvectors in columns
     return mps
 end
 
-function ctm(mps, beta, Nkeep) #2000
+function ctm(psi_i, beta, Nkeep)
+    L = size(psi_i, 1)
+
     # time evolving the CPS by time beta/2
-    metts = tdmrg(mps, beta/2, 2000, Nkeep)
-    return metts
+    mnew = tdmrg(psi_i, beta/2, 2000, Nkeep)
+
+    # calculating metts = P_i^(-1/2) * e^(- beta H / 2) psi_i
+    mnew = normalise(mnew)
+    return mnew
 end
+
+Id = proj_mpo(reshape(LinearAlgebra.I(3), 1, 3, 1, 3), 10, 1)
+
+P = mpo_expectation(Id, cps_z(1,10))
