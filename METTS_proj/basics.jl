@@ -85,11 +85,15 @@ function heisenbergmpo(L::Int, J::Float64 = 1.0)
 end
 
 function normalise(mps)
+    mps[1] = mps[1] / sqrt(normis(mps))
+    return mps
+end
+
+function normis(mps)
     L = length(mps)
     Id = proj_mpo(reshape(LinearAlgebra.I(3), 1, 3, 1, 3), L, 1)
-    norm = mpo_expectation(Id, mps)
-    mps[1] = mps[1] / sqrt(norm)
-    return mps
+    normis = mpo_expectation(Id, mps)
+    return normis  
 end
 
 function mpo_on_mps(mpo, mps)
@@ -100,8 +104,7 @@ function mpo_on_mps(mpo, mps)
         if i < L
             mps = sitecanonical(mps, i+1)
         end
-    end
-    
+    end   
     return mps
 end
 
@@ -137,7 +140,9 @@ function applyHtoC(W, MPS, ell)
     HC = contract(HC, [2,3], Well,[1,4])
     HC = contract(HC,[2,4], Renv,[3,2])
 
-    return HC
+
+
+    return HC/LinearAlgebra.norm(HC)
 end
 
 function canonForm(M,id,Nkeep=Inf)

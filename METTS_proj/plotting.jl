@@ -9,8 +9,8 @@ L = 5
 S = 1
 beta = 1
 steps = 5
-ensemble_size = 10
-Nkeep = 8
+ensemble_size = 5
+Nkeep = 10
 
 
 
@@ -25,24 +25,24 @@ for j in 1:ensemble_size
     c = copy(cps)
     cz = copy(cps)
 
-    # # iteration for Sz Sx
-    # for i in 1:steps
-    #     metts = ctm(c, beta, Nkeep)
+    iteration for Sz Sx
+    for i in 1:steps
+        metts = ctm(c, beta, Nkeep)
 
-    #     # measure energy E for metts generated here
-    #     E = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
-    #     E_zx[i] = E_zx[i] + E
-    #     println("E: ", E)
-    #     if isodd(i)
-    #         c = cpscollapse(metts, 1)
-    #     else 
-    #         c = cpscollapse(metts, 3)
-    #     end
-    #     println("Sz Sx ensemble state number, step number: ", j, ", ", i)
-    # end
+        # measure energy E for metts generated here
+        E = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
+        E_zx[i] = E_zx[i] + E
+        println("E: ", E)
+        if isodd(i)
+            c = cpscollapse(metts, 1)
+        else 
+            c = cpscollapse(metts, 3)
+        end
+        println("Sz Sx ensemble state number, step number: ", j, ", ", i)
+    end
 
 
-    # iteration for Sz
+    #iteration for Sz
     for i in 1:steps
         metts = ctm(cz, beta, Nkeep)
 
@@ -75,3 +75,5 @@ plot(1:steps, [z_energy zx_energy], title="energy per site e vs Steps", label=["
 xlabel!("Step Number")
 ylabel!("Energy per Site")
 print(zx_energy)
+
+
