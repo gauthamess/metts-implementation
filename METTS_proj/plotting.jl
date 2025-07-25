@@ -6,11 +6,10 @@ include("gates.jl")
 include("collapse.jl")
 
 L = 5
-S = 1
 beta = 1
-steps = 5
+steps = 10
 ensemble_size = 5
-Nkeep = 10
+Nkeep = 20
 
 
 
@@ -21,11 +20,11 @@ E_zx = zeros(steps)
 E_z = zeros(steps)
 
 for j in 1:ensemble_size
-    cps = cps_z(1, L)
+    cps = cpsrandom(1, L)
     c = copy(cps)
     cz = copy(cps)
 
-    iteration for Sz Sx
+    #iteration for Sz Sx random
     for i in 1:steps
         metts = ctm(c, beta, Nkeep)
 
@@ -33,7 +32,8 @@ for j in 1:ensemble_size
         E = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
         E_zx[i] = E_zx[i] + E
         println("E: ", E)
-        if isodd(i)
+        rolls = rand()
+        if rolls > 0.5
             c = cpscollapse(metts, 1)
         else 
             c = cpscollapse(metts, 3)
