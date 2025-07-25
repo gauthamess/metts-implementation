@@ -18,27 +18,21 @@ using LinearAlgebra
 # end
 
 
-L= 7
+L= 4
 
 randmps = cps_z(1,L)
 
 # #Now, evolve it to metts
-smallmetts1 = ctm(copy(randmps),0.1,1)
-smallmetts20 = ctm(copy(randmps),20,1)
+smallmetts1 = ctm(copy(randmps),1,30)
+smallmetts20 = ctm(copy(randmps),10,30)
 
+mpo_expectation(heisenbergmpo(L,1.0),randmps)
 mpo_expectation(heisenbergmpo(L,1.0), smallmetts1)
 mpo_expectation(heisenbergmpo(L,1.0), smallmetts20)
 
 
 
 
-# firstcps = cps_z(1,L)
-# steps = 10
-# beta = 20
-# cps = copy(firstcps)
-# for i in 1:steps
-#     metts = ctm(cps,beta,10)
-#     println("ENERGY IS: ",mpo_expectation(heisenbergmpo(L,1.0), metts))
-#     cps = cpscollapse(cps,3)
-# end
-#L=10 so i should get ~ -11
+for i in 10:-1:1
+    print(i)
+end

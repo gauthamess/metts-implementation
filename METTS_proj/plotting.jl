@@ -8,9 +8,9 @@ include("collapse.jl")
 L = 5
 beta = 1
 steps = 10
-ensemble_size = 5
+ensemble_size = 10
 Nkeep = 20
-
+Nsteps = 200
 
 
 # initialise energy array for Sz Sx 
@@ -26,7 +26,7 @@ for j in 1:ensemble_size
 
     #iteration for Sz Sx random
     for i in 1:steps
-        metts = ctm(c, beta, Nkeep)
+        metts = tdmrg(c, beta, Nsteps, Nkeep)
 
         # measure energy E for metts generated here
         E = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
@@ -44,7 +44,7 @@ for j in 1:ensemble_size
 
     #iteration for Sz
     for i in 1:steps
-        metts = ctm(cz, beta, Nkeep)
+        metts = tdmrg(cz, beta, Nkeep,Nsteps)
 
         # measure energy E for metts generated here
         Ez = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
@@ -61,14 +61,6 @@ end
 # to get energy per state per site
 zx_energy = E_zx / (ensemble_size * L) 
 z_energy = E_z / (ensemble_size * L)
-
-# cpscollapase(testerarrz[4],3)
-# size(testerarrzx)
-# testerarrzx[4][28][1,:,1]
-# size(testerarrzx[6][10])
-# input = testerarrzx[1]
-# check = ctm(testerarrzx[1],1,15)
-# check[9][1,:,1]
 
 # plotting the energies (change title later)
 plot(1:steps, [z_energy zx_energy], title="energy per site e vs Steps", label=["Z only" "Z and X"], linewidth=3)

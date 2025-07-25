@@ -85,7 +85,6 @@ function tdmrg(mps, beta, Nsteps, Nkeep)
         mps = leftcanonical(mps)
         truncateRight(mps,Nkeep)
     end
-    mps = leftcanonical(mps,Nkeep=Nkeep)
     mps = normalise(mps)
     return mps
 end
