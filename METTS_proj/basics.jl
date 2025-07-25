@@ -145,131 +145,13 @@ function applyHtoC(W, MPS, ell)
     return HC/LinearAlgebra.norm(HC)
 end
 
-function canonForm(M,id,Nkeep=Inf)
-
-dw = zeros(length(M)-1,1); # discarded weights
-
-# # Bring the left part of MPS into the left-canonical form
-for it = (1:id)
-    
-    # reshape M[it] & SVD
-    T = M[it]
-    T = reshape(T,(size(T,1)*size(T,2),size(T,3)))
-    svdT = LinearAlgebra.svd(T)
-    U = svdT.U
-    S = svdT.S
-    V = svdT.Vt'     
-    Svec = S; # vector of singular values
-    
-    # truncate singular values/vectors; keep up to Nkeep. Truncation at the
-    # bond between M[id] & M[id+1] is performed later.
-    if ~isinf(Nkeep) && (it < id)
-        nk = min(length(Svec),Nkeep); # actual number of singular values/vectors to keep
-        dw[it] = dw[it] + sum(Svec[nk+1:end].^2); # discarded weights
-        U = U[:,(1:nk)]
-        V = V[:,(1:nk)]
-        Svec = Svec[1:nk]
+function truncateRight(mps,Nkeep)
+    lmps = size(mps,1)
+    for i in lmps-1:-1:1
+        mtemp = contract(mps[i],3,mps[i+1],1)
+        U,S,Vd,_ = svd(mtemp,[1,2];Nkeep=Nkeep)
+        mps[i] = contract(U,3,diagm(S),1)
+        mps[i+1] = Vd
     end
-    
-    S = diagm(Svec); # return to square matrix
-    
-    # reshape U into rank-3 tensor, & replace M[it] with it
-    M[it] = reshape(U,(size(U,1)÷size(M[it],2),size(M[it],2),size(U,2)))
-    
-    if it < id
-        # contract S & V' with M[it+1]
-        M[it+1] = contract(S*V',2,2,M[it+1],3,1)
-    else
-        # R1: tensor which is the leftover after transforming the left
-        #   part. It will be contracted with the counterpart R2 which is
-        #   the leftover after transforming the right part. Then R1*R2 will
-        #   be SVD-ed & its left/right singular vectors will be
-        #   contracted with the neighbouring M-tensors.
-        R1 = S*V'
-    end
-    
-end
-
-# # In case of fully right-canonical form; the above for-loop is not executed
-if id == 0
-    R1 = 1
-end
-    
-# # Bring the right part into the right-canonical form
-for it = (length(M):-1:id+1)
-    
-    # reshape M[it] & SVD
-    T = M[it]
-    T = reshape(T,(size(T,1),size(T,2)*size(T,3)))
-    svdT = LinearAlgebra.svd(T)
-    U = svdT.U
-    S = svdT.S
-    V = svdT.Vt' 
-    Svec = S; # vector of singular values
-    
-    # truncate singular values/vectors; keep up to Nkeep. Truncation at the
-    # bond between M[id] & M[id+1] is performed later.
-    if ~isinf(Nkeep) && (it > (id+1))
-        nk = min(length(Svec),Nkeep); # actual number of singular values/vectors to keep
-        dw[it-1] = dw[it-1] + sum(Svec[nk+1:end].^2); # discarded weights
-        U = U[:,(1:nk)]
-        V = V[:,(1:nk)]
-        Svec = Svec[1:nk]
-    end
-    
-    S = diagm(Svec); # return to square matrix
-    
-    # reshape V' into rank-3 tensor, replace M[it] with it
-    M[it] = reshape(V',(size(V,2),size(M[it],2),size(V,1)÷size(M[it],2)))
-    
-    if it > (id+1)
-        # contract U & S with M[it-1]
-        M[it-1] = contract(M[it-1],3,3,U*S,2,1)
-    else
-        # R2: tensor which is the leftover after transforming the right
-        #   part. See the description of R1 above.
-        R2 = U*S
-    end
-    
-end
-
-# # In case of fully left-canonical form; the above for-loop is not executed
-if id == length(M)
-    R2 = 1
-end
-
-# # SVD of R1*R2; & contract the left/right singular vectors to the tensors
-
-    svdT = LinearAlgebra.svd(R1*R2)
-    U = svdT.U
-    S = svdT.S
-    V = svdT.Vt' 
-
-# truncate singular values/vectors; keep up to Nkeep. At the leftmost &
-# rightmost legs [dummy legs], there should be no truncation, since they
-# are already of size 1.
-if ~isinf(Nkeep) && (id > 0) && (id < length(M))
-    
-    nk = min(length(S),Nkeep); # actual number of singular values/vectors
-    dw[id] = dw[id] + sum(S[nk+1:end].^2); # discarded weights
-    U = U[:,(1:nk)]
-    V = V[:,(1:nk)]
-    S = S[1:nk]
-    
-end
-
-if id == 0 # fully right-canonical form
-    # U is a single number which serves as the overall phase factor to the
-    # total many-site state. So we can pass over U to V'.
-    M[1] = contract(U*V',2,2,M[1],3,1)
-elseif id == length(M) # fully left-canonical form
-    # V' is a single number which serves as the overall phase factor to the
-    # total many-site state. So we can pass over V' to U.
-    M[end] = contract(M[end],3,3,U*V',2,1)
-else
-    M[id] = contract(M[id],3,3,U,2,1)
-    M[id+1] = contract(V',2,2,M[id+1],3,1)
-end
-
-return M
+    return mps
 end

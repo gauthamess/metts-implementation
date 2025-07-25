@@ -66,19 +66,27 @@ function tdmrg(mps, beta, Nsteps, Nkeep)
         for i in 1:2:floor(Int, (2*lmps-1)/2) #ODD SWEEP
             mps = applygate(mps, i, expH)
         end
+        mps = leftcanonical(mps)
+        mps = truncateRight(mps,Nkeep)
         for i in 2:2:floor(Int, (2*lmps-1)/2) #EVEN SWEEP
             mps = applygate(mps, i, expH)
         end
-        mps = leftcanonical(mps,Nkeep)
+        mps = leftcanonical(mps)
+        mps = truncateRight(mps,Nkeep)
         #2. BACKWARD SWEEP
         for i in (2*floor(Int, (lmps-2)/2) + 1):-2:1 #ODD SWEEP
             mps = applygate(mps, i, expH)
         end
+        mps = leftcanonical(mps)
+        truncateRight(mps,Nkeep)
         for i in (2*floor(Int, (lmps-1)/2)):-2:2 #EVEN SWEEP
             mps = applygate(mps, i, expH)
         end
+        mps = leftcanonical(mps)
+        truncateRight(mps,Nkeep)
     end
     mps = leftcanonical(mps,Nkeep=Nkeep)
     mps = normalise(mps)
     return mps
 end
+
