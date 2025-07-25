@@ -149,9 +149,22 @@ function truncateRight(mps,Nkeep)
     lmps = size(mps,1)
     for i in lmps-1:-1:1
         mtemp = contract(mps[i],3,mps[i+1],1)
-        U,S,Vd,_ = svd(mtemp,[1,2];Nkeep=Nkeep)
+        U,S,Vd,_ = svd(mtemp,[1,2],Nkeep=Nkeep,tolerance = tol)
         mps[i] = contract(U,3,diagm(S),1)
         mps[i+1] = Vd
     end
     return mps
+end
+
+function mpo_expectation(W::Vector{<:AbstractArray{<:Number,4}}, 
+                         MPS::Vector{<:AbstractArray{<:Number,3}})
+    # Initialize environment as scalar identity in a 3-leg tensor form
+    C = ones(eltype(W[1]), (1, 1, 1))
+
+    for i in eachindex(W)
+        C = updateLeft(C, MPS[i], W[i], MPS[i])
+    end
+
+    # At the end, C is (1,1,1), so extract scalar value
+    return real(C[1,1,1])
 end

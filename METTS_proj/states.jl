@@ -35,14 +35,3 @@ function cpsrandom(spin, N) #Sz product states # Eigenvectors in columns
     end
     return mps
 end
-
-function ctm(psi_i, beta, Nkeep)
-    L = size(psi_i, 1)
-
-    # time evolving the CPS by time beta/2
-    mnew = tdmrg(psi_i, beta, 2000, Nkeep)
-
-    # calculating metts = P_i^(-1/2) * e^(- beta H / 2) psi_i
-    #mnew = normalise(mnew)
-    return mnew
-end

@@ -1,3 +1,5 @@
+tol = 1e-10
+
 function trotter(spin, beta, Nsteps)
     tauT = beta / Nsteps # Trotter time step
 
@@ -29,7 +31,7 @@ function applygate(mps, l, Hgate)
     mtau = permutedims(mtau,(1,3,4,2))
 
     # svd to separate back into two sites
-    U,S,Vd,_ = svd(mtau,[1, 2])
+    U,S,Vd,_ = svd(mtau,[1, 2];tolerance = tol)
 
     # since the site index should move, contract S with Vd
     mps[l] = U
@@ -47,7 +49,7 @@ function applygate_backward(mps, l, Hgate)
     mtau = permutedims(mtau,(1,3,4,2))
 
     # svd to separate back into two sites
-    U,S,Vd,_ = svd(mtau,[1, 2])
+    U,S,Vd,_ = svd(mtau,[1, 2];tolerance = tol)
 
     # since the site index should move, contract S with Vd
     mps[l] = contract(U, 3, diagm(S), 1)
@@ -66,23 +68,23 @@ function tdmrg(mps, beta, Nsteps, Nkeep)
         for i in 1:2:floor(Int, (2*lmps-1)/2) #ODD SWEEP
             mps = applygate(mps, i, expH)
         end
-        mps = leftcanonical(mps)
+        mps = leftcanonical(mps;tolerance = tol)
         mps = truncateRight(mps,Nkeep)
         for i in 2:2:floor(Int, (2*lmps-1)/2) #EVEN SWEEP
             mps = applygate(mps, i, expH)
         end
-        mps = leftcanonical(mps)
+        mps = leftcanonical(mps;tolerance = tol)
         mps = truncateRight(mps,Nkeep)
         #2. BACKWARD SWEEP
         for i in (2*floor(Int, (lmps-2)/2) + 1):-2:1 #ODD SWEEP
             mps = applygate(mps, i, expH)
         end
-        mps = leftcanonical(mps)
+        mps = leftcanonical(mps;tolerance = tol)
         truncateRight(mps,Nkeep)
         for i in (2*floor(Int, (lmps-1)/2)):-2:2 #EVEN SWEEP
             mps = applygate(mps, i, expH)
         end
-        mps = leftcanonical(mps)
+        mps = leftcanonical(mps;tolerance = tol)
         truncateRight(mps,Nkeep)
     end
     mps = normalise(mps)

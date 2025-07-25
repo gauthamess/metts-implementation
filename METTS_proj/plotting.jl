@@ -5,12 +5,12 @@ include("states.jl")
 include("gates.jl")
 include("collapse.jl")
 
-L = 5
-beta = 1
-steps = 10
-ensemble_size = 10
+L = 10
+beta = 10
+steps = 5
+ensemble_size = 5
 Nkeep = 20
-Nsteps = 200
+Nsteps = 300
 
 
 # initialise energy array for Sz Sx 
@@ -23,6 +23,7 @@ for j in 1:ensemble_size
     cps = cpsrandom(1, L)
     c = copy(cps)
     cz = copy(cps)
+    print("STARTING IS: ", mpo_expectation(heisenbergmpo(L, 1.0), copy(c)))
 
     #iteration for Sz Sx random
     for i in 1:steps
@@ -43,18 +44,18 @@ for j in 1:ensemble_size
 
 
     #iteration for Sz
-    for i in 1:steps
-        metts = tdmrg(cz, beta, Nkeep,Nsteps)
+#     for i in 1:steps
+#         metts = tdmrg(cz, beta, Nkeep,Nsteps)
 
-        # measure energy E for metts generated here
-        Ez = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
-        E_z[i] = E_z[i] + Ez
-        println("E: ", Ez)
+#         # measure energy E for metts generated here
+#         Ez = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
+#         E_z[i] = E_z[i] + Ez
+#         println("E: ", Ez)
 
-        cz = cpscollapse(metts, 3)
+#         cz = cpscollapse(metts, 3)
         
-        println("Sz ensemble state number, step number: ", j, ", ", i)
-    end
+#         println("Sz ensemble state number, step number: ", j, ", ", i)
+#     end
 end
 
 
