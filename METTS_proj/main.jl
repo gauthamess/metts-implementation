@@ -55,7 +55,11 @@ end
 
 ensemble = mat = load("output_betais1_Lis10.jld2", "savemat")
 
-
+energy_arr = ensemble[1]
+size(ensemble[1])
+ensemble[1][1]
+ensemble[1,1]
+mpo_expectation(heisenbergmpo(10,1.0),ensemble[5,9]) 
 
 
 energy_arr = zeros(10)  # one sum per column
