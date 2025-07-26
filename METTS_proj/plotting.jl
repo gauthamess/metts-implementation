@@ -6,11 +6,11 @@ include("gates.jl")
 include("collapse.jl")
 
 L = 10
-beta = 10
-steps = 5
-ensemble_size = 5
-Nkeep = 20
-Nsteps = 300
+beta = 1
+steps = 10
+ensemble_size = 15
+Nkeep = 30
+Nsteps = beta*100
 
 
 # initialise energy array for Sz Sx 

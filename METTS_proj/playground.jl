@@ -17,9 +17,9 @@ using LinearAlgebra
 #     println("collapsed energy: ", mpo_expectation(heisenbergmpo(10,1.0), collap)/L, "collap norm ", norm(collap))
 # end
 
+using JLD2
 
 L= 4
-
 randmps = cps_z(1,L)
 
 # #Now, evolve it to metts
@@ -29,10 +29,3 @@ smallmetts20 = ctm(copy(randmps),10,30)
 mpo_expectation(heisenbergmpo(L,1.0),randmps)
 mpo_expectation(heisenbergmpo(L,1.0), smallmetts1)
 mpo_expectation(heisenbergmpo(L,1.0), smallmetts20)
-
-
-
-
-for i in 10:-1:1
-    print(i)
-end

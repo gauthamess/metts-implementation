@@ -9,17 +9,17 @@ include("collapse.jl")
 
 using JLD2
 
-L = 50
+L = 10
 beta = 1
 steps = 10
 ensemble_size = 15
 Nkeep = 30
-Nsteps = beta*150
+Nsteps = beta*100
+
 
 savemat = Matrix{Any}(undef, ensemble_size, steps)
 
-function createEnsemble()
-    
+function createEnsemble()    
     for e in 1:ensemble_size
         println("starting ensemble $e")
         success = false
@@ -43,17 +43,33 @@ function createEnsemble()
                     end
                 end
                 success = true
-            catch
+            catch err
                 trial += 1
+                println("Error: ", err)
                 println("Error in ensemble $e, trial $trial, retrying")
             end
         end
-        @save "output_betaIs1.jld2" savemat
+        @save "output_betaIs1_Lis10.jld2" savemat
     end
 end
 
+ensemble = mat = load("output_betais1_Lis10.jld2", "savemat")
+
+
+
+
+energy_arr = zeros(10)  # one sum per column
+
+for j in 1:10
+    for i in 1:15
+        energy_arr[j] += mpo_expectation(heisenbergmpo(10,1.0),ensemble[i,j])
+    end
+end
+
+plot_arr = energy_arr ./ (L*ensemble_size)
+plot(1:steps, [plot_arr], title="energy per site e vs Steps", label=["Z and X"], linewidth=3)
+xlabel!("Step Number")
+ylabel!("Energy per Site")
+
+
 createEnsemble()
-
-
-
-
