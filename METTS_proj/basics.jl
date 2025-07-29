@@ -250,6 +250,17 @@ function truncateRight(mps,Nkeep)
     return mps
 end
 
+function truncateLeft(mps,Nkeep)
+    lmps = size(mps,1)
+    for i in 1:1:lmps-1
+        mtemp = contract(mps[i],3,mps[i+1],1)
+        U,S,Vd,_ = svd(mtemp,[1,2],Nkeep=Nkeep,tolerance = tol)
+        mps[i] = U
+        mps[i+1] = contract(diagm(S),2,Vd,1)
+    end
+    return mps
+end
+
 function mpo_expectation(W, 
                          MPS)
     # Initialize environment as scalar identity in a 3-leg tensor form

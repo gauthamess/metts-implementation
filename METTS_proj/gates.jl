@@ -79,13 +79,17 @@ function tdmrg(mps, beta, Nsteps, Nkeep)
         for i in (2*floor(Int, (lmps-2)/2) + 1):-2:1 #ODD SWEEP
             mps = applygate(mps, i, expH)
         end
-        mps = leftcanonical(mps;tolerance = tol)
-        truncateRight(mps,Nkeep)
+        # mps = leftcanonical(mps;tolerance = tol)
+        # truncateRight(mps,Nkeep)
+        mps = rightcanonical(mps;tolerance = tol)
+        truncateLeft(mps,Nkeep)
         for i in (2*floor(Int, (lmps-1)/2)):-2:2 #EVEN SWEEP
             mps = applygate(mps, i, expH)
         end
-        mps = leftcanonical(mps;tolerance = tol)
-        truncateRight(mps,Nkeep)
+        # mps = leftcanonical(mps;tolerance = tol)
+        # truncateRight(mps,Nkeep)
+        mps = rightcanonical(mps;tolerance = tol)
+        truncateLeft(mps,Nkeep)
     end
     mps = normalise(mps)
     return mps
