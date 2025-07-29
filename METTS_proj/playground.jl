@@ -29,3 +29,15 @@ smallmetts20 = ctm(copy(randmps),10,30)
 mpo_expectation(heisenbergmpo(L,1.0),randmps)
 mpo_expectation(heisenbergmpo(L,1.0), smallmetts1)
 mpo_expectation(heisenbergmpo(L,1.0), smallmetts20)
+
+testcps = cps_z(1,5)
+
+testcps[1][1,:,1]
+
+for i in 1:5
+    println(testcps[i][1,:,1])
+end
+
+
+mpo_expectation(sz_squared_mpo(5),testcps)
+mpo_expectation(sz_tot_mpo(5),testcps)

@@ -84,6 +84,100 @@ function heisenbergmpo(L::Int, J::Float64 = 1.0)
     return mpo
 end
 
+function sz_tot_mpo(L::Int)
+    # Get local spin-1 operators (3x3 matrices)
+    Sz = Sxyz(1,3)
+    Id = LinearAlgebra.I(3)
+
+    # Special case: single site
+    if L == 1
+        W = zeros(ComplexF64, 1, 3, 1, 3)  # [left, phys_in, right, phys_out]
+        W[1, :, 1, :] = Sz
+        return [W]
+    end
+
+    # Bulk tensor  (bond dimension = 2 (2 states: no Sz yet,Sz done))
+    W_bulk = zeros(ComplexF64, 2, 3, 2, 3)  # [left, phys_in, right, phys_out] d = 3 for spin1
+    
+    # State 1 transitions (no Sz yet)
+    W_bulk[1, :, 1, :] = Id  # Skip site - remain in state 1
+    W_bulk[1, :, 2, :] = Sz   # Add Sz - move to state 2
+    
+    # State 2 transitions (already have Sz)
+    W_bulk[2, :, 2, :] = Id   # have toapply identity - remain in state 2
+
+    # First site (left edge)
+    W_first = zeros(ComplexF64, 1, 3, 2, 3)  # Left dim=1, right dim=2
+    W_first[1, :, 1, :] = Id   # Skip - next state: 1
+    W_first[1, :, 2, :] = Sz    # Add Sz - next state: 2
+
+    # Last site (right edge)
+    W_last = zeros(ComplexF64, 2, 3, 1, 3)  # Left dim=2, right dim=1
+    W_last[1, :, 1, :] = Sz    # If in state 1: ADD Sz HERE!
+    W_last[2, :, 1, :] = Id    # If in state 2: apply identity
+
+    # Build MPO chain
+    mpo = [W_first]
+    for _ in 2:(L-1)
+        push!(mpo, copy(W_bulk))
+    end
+    push!(mpo, copy(W_last))
+
+    return mpo
+end
+
+function sz_squared_mpo(L::Int)
+    # Get local spin-1 operators
+    Sz = Sxyz(1,3)
+    Id = LinearAlgebra.I(3)
+
+    Sz2 = Sz*Sz  # (S_z)^2 operator
+
+    # Handle L=1 separately only get Sz^2
+    if L == 1
+        W = zeros(ComplexF64, 1, 3, 1, 3)  # [left, phys_in, right, phys_out]
+        W[1, :, 1, :] = Sz2  
+        return [W]
+    end
+
+    # Bulk tensor (bond dimension = 3)
+    W_bulk = zeros(ComplexF64, 3, 3, 3, 3)  # [left, phys_in, right, phys_out]
+    
+    # State 1 transitions
+    W_bulk[1, :, 1, :] = Id
+    W_bulk[1, :, 2, :] = Sz
+    W_bulk[1, :, 3, :] = Sz2 #state 3 is final state
+    
+    # State 2 transitions
+    W_bulk[2, :, 2, :] = Id
+    W_bulk[2, :, 3, :] = 2 * Sz #factor of 2 from product
+    
+    # State 3 transitions
+    W_bulk[3, :, 3, :] = Id
+    
+    # Build MPO tensors
+    mpo = []
+
+    W_first = zeros(ComplexF64, 1, 3, 3, 3)  # Left dim=1, right dim=2
+    W_first[1, :, 1, :] = Id   # Skip - next state: 1
+    W_first[1, :, 2, :] = Sz    # Add Sz - next state: 2
+    W_first[1, :, 3, :] = Sz2   # Add Sz2 - next state: 3
+    push!(mpo, W_first)
+    
+    # Bulk sites (sites 2 to L-1)
+    for _ in 2:(L-1)
+        push!(mpo, copy(W_bulk))
+    end
+    # Last site (close MPO, bond dim = 3 x 3 x 1 x 3)
+    W_last = zeros(ComplexF64, 3, 3, 1, 3)
+    W_last[1, :, 1, :] = Sz2    # if in state 1, local Sz^2 applied at last site
+    W_last[2, :, 1, :] = 2*Sz     # if in state 2, apply second Sz here
+    W_last[3, :, 1, :] = Id     # if in state 3, continue with identity
+    push!(mpo, copy(W_last))
+    
+    return mpo
+end
+
 function normalise(mps)
     mps[1] = mps[1] / sqrt(normis(mps))
     return mps
@@ -98,11 +192,11 @@ end
 
 function mpo_on_mps(mpo, mps)
     L = size(mps, 1)
-    mps = sitecanonical(mps, 1)
+    mps = sitecanonical(mps, 1;tolerance = tol)
     for i in 1:L
         mps[i] = applyHtoC(mpo, mps, i)
         if i < L
-            mps = sitecanonical(mps, i+1)
+            mps = sitecanonical(mps, i+1;tolerance = tol)
         end
     end   
     return mps
@@ -156,8 +250,8 @@ function truncateRight(mps,Nkeep)
     return mps
 end
 
-function mpo_expectation(W::Vector{<:AbstractArray{<:Number,4}}, 
-                         MPS::Vector{<:AbstractArray{<:Number,3}})
+function mpo_expectation(W, 
+                         MPS)
     # Initialize environment as scalar identity in a 3-leg tensor form
     C = ones(eltype(W[1]), (1, 1, 1))
 

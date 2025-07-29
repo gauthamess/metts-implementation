@@ -8,9 +8,10 @@ function cpscollapse(metts, base)
     L = size(metts, 1)
 
     for i in 1:L
+      flag = 0
         # finding probabilities pm
         pm = zeros(3)
-        for m = -1:1:1
+        for m = 1:-1:-1
             P = proj(m, base)
             mpo = proj_mpo(P, L, i)
             pm[m+2] = mpo_expectation(mpo, metts) #probability for each collapse

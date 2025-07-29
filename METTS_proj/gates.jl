@@ -1,4 +1,4 @@
-tol = 1e-7
+tol = 1e-13
 
 function trotter(spin, beta, Nsteps)
     tauT = beta / Nsteps # Trotter time step

@@ -5,13 +5,14 @@ include("states.jl")
 include("gates.jl")
 include("collapse.jl")
 
-L = 10
-beta = 1
-steps = 10
-ensemble_size = 15
-Nkeep = 30
-Nsteps = beta*100
+tol = 1e-13
 
+L = 5
+beta = 5
+steps = 10
+ensemble_size = 5
+Nkeep = 30
+Nsteps = beta*50
 
 # initialise energy array for Sz Sx 
 E_zx = zeros(steps)
@@ -31,8 +32,9 @@ for j in 1:ensemble_size
 
         # measure energy E for metts generated here
         E = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
+        println(E)
         E_zx[i] = E_zx[i] + E
-        println("E: ", E)
+        #println("E: ", E)
         rolls = rand()
         if rolls > 0.5
             c = cpscollapse(metts, 1)
@@ -42,29 +44,28 @@ for j in 1:ensemble_size
         println("Sz Sx ensemble state number, step number: ", j, ", ", i)
     end
 
+    #     for i in 1:steps
+    #     metts = tdmrg(c, beta, Nsteps, Nkeep)
 
-    #iteration for Sz
-#     for i in 1:steps
-#         metts = tdmrg(cz, beta, Nkeep,Nsteps)
+    #     # measure energy E for metts generated here
+    #     E = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
+    #     E_z[i] = E_z[i] + E
+    #     println("E: ", E)
 
-#         # measure energy E for metts generated here
-#         Ez = mpo_expectation(heisenbergmpo(L, 1.0), copy(metts))
-#         E_z[i] = E_z[i] + Ez
-#         println("E: ", Ez)
+    #     c = cpscollapse(metts, 3)
+    #     println("Sz ensemble state number, step number: ", j, ", ", i)
+    # end
 
-#         cz = cpscollapse(metts, 3)
-        
-#         println("Sz ensemble state number, step number: ", j, ", ", i)
-#     end
 end
 
 
 # to get energy per state per site
 zx_energy = E_zx / (ensemble_size * L) 
-z_energy = E_z / (ensemble_size * L)
+z_energy = E_z / (ensemble_size * L) 
+
 
 # plotting the energies (change title later)
-plot(1:steps, [z_energy zx_energy], title="energy per site e vs Steps", label=["Z only" "Z and X"], linewidth=3)
+plot(1:steps, [zx_energy], title="energy per site e vs Steps", label=["Z and X" "Z"], linewidth=3)
 xlabel!("Step Number")
 ylabel!("Energy per Site")
 print(zx_energy)
